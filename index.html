@@ -68,6 +68,34 @@
     <script>
         const githubRepo = "briansimpsonn/workcalendar"; // Cseréld le a saját repo nevedre
 
+        function generateCalendar(schedule = {}) {
+            let tableBody = document.getElementById('calendar-body');
+            tableBody.innerHTML = '';
+            let daysOfWeek = ['Hétfő', 'Kedd', 'Szerda', 'Csütörtök', 'Péntek'];
+            let headerRow = `<tr><th>Idő</th>`;
+            daysOfWeek.forEach(day => {
+                headerRow += `<th>${day}</th>`;
+            });
+            headerRow += `</tr>`;
+            tableBody.innerHTML += headerRow;
+
+            for (let hour = 8; hour < 16; hour++) {
+                let row = `<tr><td>${hour}:00 - ${hour + 1}:00</td>`;
+                daysOfWeek.forEach(day => {
+                    let assignedUser = schedule[day]?.[hour] || "";
+                    row += `<td class="time-slot">
+                        <select class="user-select" data-day="${day}" data-hour="${hour}">
+                            <option value="Péter" ${assignedUser === "Péter" ? "selected" : ""}>Péter</option>
+                            <option value="Dávid" ${assignedUser === "Dávid" ? "selected" : ""}>Dávid</option>
+                            <option value="Tibor" ${assignedUser === "Tibor" ? "selected" : ""}>Tibor</option>
+                        </select>
+                    </td>`;
+                });
+                row += `</tr>`;
+                tableBody.innerHTML += row;
+            }
+        }
+
         async function saveSchedule() {
             let schedule = {};
             document.querySelectorAll('.user-select').forEach(select => {
