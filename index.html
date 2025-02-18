@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Munkabeosztás Naptár</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f3f3f3;
+        }
+        .calendar-container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 20px auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 15px;
+            border: 1px solid #ccc;
+            text-align: center;
+        }
+        th {
+            background-color: #005a9e;
+            color: white;
+            font-size: 16px;
+        }
+        .peter { background-color: #a0c4ff; color: black; }
+        .david { background-color: #fff3b0; color: black; }
+        .tibor { background-color: #b7e4c7; color: black; }
+        .time-slot {
+            height: 50px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .time-slot:hover {
+            opacity: 0.8;
+        }
+        select {
+            width: 100%;
+            padding: 5px;
+            border: none;
+            background: transparent;
+            font-size: 16px;
+        }
+        .buttons {
+            margin: 20px;
+        }
+        button {
+            padding: 10px 15px;
+            font-size: 16px;
+            margin: 5px;
+            cursor: pointer;
+            border: none;
+            background-color: #005a9e;
+            color: white;
+            border-radius: 5px;
+        }
+    </style>
+    <script>
+        let daysOfWeek = ['Hétfő', 'Kedd', 'Szerda', 'Csütörtök', 'Péntek'];
+        let defaultSchedule = { 'Hétfő': 'Péter', 'Kedd': 'Dávid', 'Szerda': 'Dávid', 'Csütörtök': 'Tibor', 'Péntek': 'Péter' };
+        let users = ['Péter', 'Dávid', 'Tibor'];
+        let colors = { 'Péter': 'peter', 'Dávid': 'david', 'Tibor': 'tibor' };
+        let scheduleUrl = 'https://briansimpsonn.github.io/workcalendar/workSchedule.json';
+
+
+        function generateCalendar(schedule = {}) {
+            let tableBody = document.getElementById('calendar-body');
+            tableBody.innerHTML = '';
+            let headerRow = `<tr><th>Idő</th>`;
+            daysOfWeek.forEach(day => {
+                headerRow += `<th>${day}</th>`;
+            });
+            headerRow += `</tr>`;
+            tableBody.innerHTML += headerRow;
+
+            for (let hour = 8; hour < 16; hour++) {
+                let row = `<tr><td>${hour}:00 - ${hour + 1}:00</td>`;
+                daysOfWeek.forEach(day => {
+                    let selectedUser = schedule[day]?.[hour] || defaultSchedule[day];
+                    row += `<td class="time-slot ${colors[selectedUser]}">
+                        <select class="user-select" onchange="updateColor(this)" data-day="${day}" data-hour="${hour}">
+                            ${users.map(user => `<option value="${user}" ${user === selectedUser ? 'selected' : ''}>${user}</option>`).join('')}
+                        </select>
+                    </td>`;
+                });
+                row += `</tr>`;
+                tableBody.innerHTML += row;
+            }
+        }
+
+        function updateColor(select) {
+            let selectedUser = select.value;
+            select.parentNode.className = `time-slot ${colors[selectedUser]}`;
+            saveSchedule();
+        }
+
+        function saveSchedule() {
+            let schedule = {};
+            document.querySelectorAll('.user-select').forEach(select => {
+                let day = select.dataset.day;
+                let hour = select.dataset.hour;
+                if (!schedule[day]) schedule[day] = {};
+                schedule[day][hour] = select.value;
+            });
+            fetch(scheduleUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(schedule)
+            })
+            .then(response => response.json())
+            .then(data => console.log('Mentés sikeres:', data))
+            .catch(error => console.error('Hiba történt:', error));
+        }
+
+        function loadSchedule() {
+            fetch(scheduleUrl)
+                .then(response => response.json())
+                .then(schedule => generateCalendar(schedule))
+                .catch(error => {
+                    console.error('Hiba a naptár betöltésekor:', error);
+                    generateCalendar();
+                });
+        }
+
+        window.onload = loadSchedule;
+    </script>
+</head>
+<body>
+    <div class="calendar-container">
+        <h1>Munkabeosztás Naptár</h1>
+        <div class="buttons">
+            <button onclick="saveSchedule()">Beosztás mentése</button>
+        </div>
+        <table>
+            <tbody id="calendar-body"></tbody>
+        </table>
+    </div>
+</body>
+</html>
