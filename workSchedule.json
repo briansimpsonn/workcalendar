@@ -1,1 +1,7 @@
-{}
+{
+    "Hétfő": { "8": "Péter", "9": "Péter", "10": "Péter", "11": "Péter", "12": "Péter", "13": "Péter", "14": "Péter", "15": "Péter" },
+    "Kedd": { "8": "Dávid", "9": "Dávid", "10": "Dávid", "11": "Dávid", "12": "Dávid", "13": "Dávid", "14": "Dávid", "15": "Dávid" },
+    "Szerda": { "8": "Dávid", "9": "Dávid", "10": "Dávid", "11": "Dávid", "12": "Dávid", "13": "Dávid", "14": "Dávid", "15": "Dávid" },
+    "Csütörtök": { "8": "Tibor", "9": "Tibor", "10": "Tibor", "11": "Tibor", "12": "Tibor", "13": "Tibor", "14": "Tibor", "15": "Tibor" },
+    "Péntek": { "8": "Péter", "9": "Péter", "10": "Péter", "11": "Péter", "12": "Péter", "13": "Péter", "14": "Péter", "15": "Péter" }
+}
