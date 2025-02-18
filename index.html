@@ -66,14 +66,7 @@
         }
     </style>
     <script>
-        const githubToken = "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"; // Cseréld le a saját tokenedre
         const githubRepo = "briansimpsonn/workcalendar"; // Cseréld le a saját repo nevedre
-        const githubFilePath = "workSchedule.json";
-
-        let daysOfWeek = ['Hétfő', 'Kedd', 'Szerda', 'Csütörtök', 'Péntek'];
-        let defaultSchedule = { 'Hétfő': 'Péter', 'Kedd': 'Dávid', 'Szerda': 'Dávid', 'Csütörtök': 'Tibor', 'Péntek': 'Péter' };
-        let users = ['Péter', 'Dávid', 'Tibor'];
-        let colors = { 'Péter': 'peter', 'Dávid': 'david', 'Tibor': 'tibor' };
 
         async function saveSchedule() {
             let schedule = {};
@@ -84,33 +77,25 @@
                 schedule[day][hour] = select.value;
             });
 
-            let response = await fetch(`https://api.github.com/repos/${githubRepo}/contents/${githubFilePath}`, {
+            fetch(`https://api.github.com/repos/${githubRepo}/dispatches`, {
+                method: "POST",
                 headers: {
-                    Authorization: `token ${githubToken}`
-                }
-            });
-            let fileData = await response.json();
-            let fileSha = fileData.sha;
-
-            fetch(`https://api.github.com/repos/${githubRepo}/contents/${githubFilePath}`, {
-                method: "PUT",
-                headers: {
-                    Authorization: `token ${githubToken}`,
+                    "Accept": "application/vnd.github.v3+json",
+                    "Authorization": `token ${process.env.GITHUB_ACCESS_TOKEN}`,  // GitHub Secrets-ből fogja beolvasni
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
-                    message: "Beosztás frissítése",
-                    content: btoa(JSON.stringify(schedule, null, 2)),
-                    sha: fileSha
+                    event_type: "update-schedule",
+                    client_payload: { schedule: JSON.stringify(schedule, null, 2) }
                 })
             })
             .then(response => response.json())
-            .then(data => console.log("Beosztás mentve:", data))
+            .then(data => console.log("Mentés sikeres:", data))
             .catch(error => console.error("Hiba történt:", error));
         }
 
         function loadSchedule() {
-            fetch(`https://raw.githubusercontent.com/${githubRepo}/main/${githubFilePath}`)
+            fetch(`https://raw.githubusercontent.com/${githubRepo}/main/workSchedule.json`)
                 .then(response => response.json())
                 .then(schedule => generateCalendar(schedule))
                 .catch(error => {
@@ -126,7 +111,7 @@
     <div class="calendar-container">
         <h1>Munkabeosztás Naptár</h1>
         <div class="buttons">
-            <button onclick="saveSchedule()">Beosztás mentése.</button>
+            <button onclick="saveSchedule()">Beosztás mentése</button>
         </div>
         <table>
             <tbody id="calendar-body"></tbody>
