@@ -67,6 +67,7 @@
     </style>
     <script>
         const githubRepo = "briansimpsonn/workcalendar"; // Cseréld le a saját repo nevedre
+        const githubToken ="SCHEDULE"; // Cseréld le a saját GitHub tokenedre
         const colors = { "Péter": "peter", "Dávid": "david", "Tibor": "tibor" };
 
         function generateCalendar(schedule = {}) {
@@ -117,7 +118,7 @@
                 method: "POST",
                 headers: {
                     "Accept": "application/vnd.github.v3+json",
-                    "Authorization": `token SCHEDULE`,  // GitHub Secrets-ből fogja beolvasni
+                    "Authorization": `token ${githubToken}`,
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
@@ -155,5 +156,3 @@
     </div>
 </body>
 </html>
-
-
