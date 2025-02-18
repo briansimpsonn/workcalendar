@@ -67,6 +67,7 @@
     </style>
     <script>
         const githubRepo = "briansimpsonn/workcalendar"; // Cseréld le a saját repo nevedre
+        const colors = { "Péter": "peter", "Dávid": "david", "Tibor": "tibor" };
 
         function generateCalendar(schedule = {}) {
             let tableBody = document.getElementById('calendar-body');
@@ -83,8 +84,9 @@
                 let row = `<tr><td>${hour}:00 - ${hour + 1}:00</td>`;
                 daysOfWeek.forEach(day => {
                     let assignedUser = schedule[day]?.[hour] || "";
-                    row += `<td class="time-slot">
-                        <select class="user-select" data-day="${day}" data-hour="${hour}">
+                    let userClass = colors[assignedUser] || "";
+                    row += `<td class="time-slot ${userClass}">
+                        <select class="user-select" data-day="${day}" data-hour="${hour}" onchange="updateColor(this)">
                             <option value="Péter" ${assignedUser === "Péter" ? "selected" : ""}>Péter</option>
                             <option value="Dávid" ${assignedUser === "Dávid" ? "selected" : ""}>Dávid</option>
                             <option value="Tibor" ${assignedUser === "Tibor" ? "selected" : ""}>Tibor</option>
@@ -94,6 +96,12 @@
                 row += `</tr>`;
                 tableBody.innerHTML += row;
             }
+        }
+
+        function updateColor(select) {
+            let selectedUser = select.value;
+            let parentCell = select.parentNode;
+            parentCell.className = `time-slot ${colors[selectedUser]}`;
         }
 
         async function saveSchedule() {
@@ -109,7 +117,7 @@
                 method: "POST",
                 headers: {
                     "Accept": "application/vnd.github.v3+json",
-                    "Authorization": `token ${process.env.ACCESS_TOKEN}`,  // GitHub Secrets-ből fogja beolvasni
+                    "Authorization": `token ${process.env.GITHUB_ACCESS_TOKEN}`,  // GitHub Secrets-ből fogja beolvasni
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
@@ -147,3 +155,4 @@
     </div>
 </body>
 </html>
+
