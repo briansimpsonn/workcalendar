@@ -67,7 +67,6 @@
     </style>
     <script>
         const githubRepo = "briansimpsonn/workcalendar"; // Cseréld le a saját repo nevedre
-        const githubToken ="SCHEDULE"; // Cseréld le a saját GitHub tokenedre
         const colors = { "Péter": "peter", "Dávid": "david", "Tibor": "tibor" };
 
         function generateCalendar(schedule = {}) {
@@ -118,7 +117,7 @@
                 method: "POST",
                 headers: {
                     "Accept": "application/vnd.github.v3+json",
-                    "Authorization": `token ${githubToken}`,
+                    "Authorization": `token ${GITHUB_ACTION_SECRET}`,
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
@@ -126,9 +125,19 @@
                     client_payload: { schedule: JSON.stringify(schedule, null, 2) }
                 })
             })
-            .then(response => response.json())
-            .then(data => console.log("Mentés sikeres:", data))
-            .catch(error => console.error("Hiba történt:", error));
+            .then(response => {
+                if (response.ok) {
+                    console.log("Mentés sikeres!");
+                    alert("Beosztás sikeresen mentve!");
+                } else {
+                    console.error("Hiba történt a mentés során!");
+                    alert("Hiba történt a mentés közben!");
+                }
+            })
+            .catch(error => {
+                console.error("Hiba történt:", error);
+                alert("Mentési hiba! Ellenőrizd a konzolt.");
+            });
         }
 
         function loadSchedule() {
