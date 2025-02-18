@@ -66,45 +66,16 @@
         }
     </style>
     <script>
+        const githubToken = "GITHUB_ACCESS_TOKEN"; // Cseréld le a saját tokenedre
+        const githubRepo = "felhasznaloneved/munkabeosztas"; // Cseréld le a saját repo nevedre
+        const githubFilePath = "workSchedule.json";
+
         let daysOfWeek = ['Hétfő', 'Kedd', 'Szerda', 'Csütörtök', 'Péntek'];
         let defaultSchedule = { 'Hétfő': 'Péter', 'Kedd': 'Dávid', 'Szerda': 'Dávid', 'Csütörtök': 'Tibor', 'Péntek': 'Péter' };
         let users = ['Péter', 'Dávid', 'Tibor'];
         let colors = { 'Péter': 'peter', 'Dávid': 'david', 'Tibor': 'tibor' };
-        let scheduleUrl = 'https://briansimpsonn.github.io/workcalendar/workSchedule.json';
 
-
-        function generateCalendar(schedule = {}) {
-            let tableBody = document.getElementById('calendar-body');
-            tableBody.innerHTML = '';
-            let headerRow = `<tr><th>Idő</th>`;
-            daysOfWeek.forEach(day => {
-                headerRow += `<th>${day}</th>`;
-            });
-            headerRow += `</tr>`;
-            tableBody.innerHTML += headerRow;
-
-            for (let hour = 8; hour < 16; hour++) {
-                let row = `<tr><td>${hour}:00 - ${hour + 1}:00</td>`;
-                daysOfWeek.forEach(day => {
-                    let selectedUser = schedule[day]?.[hour] || defaultSchedule[day];
-                    row += `<td class="time-slot ${colors[selectedUser]}">
-                        <select class="user-select" onchange="updateColor(this)" data-day="${day}" data-hour="${hour}">
-                            ${users.map(user => `<option value="${user}" ${user === selectedUser ? 'selected' : ''}>${user}</option>`).join('')}
-                        </select>
-                    </td>`;
-                });
-                row += `</tr>`;
-                tableBody.innerHTML += row;
-            }
-        }
-
-        function updateColor(select) {
-            let selectedUser = select.value;
-            select.parentNode.className = `time-slot ${colors[selectedUser]}`;
-            saveSchedule();
-        }
-
-        function saveSchedule() {
+        async function saveSchedule() {
             let schedule = {};
             document.querySelectorAll('.user-select').forEach(select => {
                 let day = select.dataset.day;
@@ -112,18 +83,34 @@
                 if (!schedule[day]) schedule[day] = {};
                 schedule[day][hour] = select.value;
             });
-            fetch(scheduleUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(schedule)
+
+            let response = await fetch(`https://api.github.com/repos/${githubRepo}/contents/${githubFilePath}`, {
+                headers: {
+                    Authorization: `token ${githubToken}`
+                }
+            });
+            let fileData = await response.json();
+            let fileSha = fileData.sha;
+
+            fetch(`https://api.github.com/repos/${githubRepo}/contents/${githubFilePath}`, {
+                method: "PUT",
+                headers: {
+                    Authorization: `token ${githubToken}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    message: "Beosztás frissítése",
+                    content: btoa(JSON.stringify(schedule, null, 2)),
+                    sha: fileSha
+                })
             })
             .then(response => response.json())
-            .then(data => console.log('Mentés sikeres:', data))
-            .catch(error => console.error('Hiba történt:', error));
+            .then(data => console.log("Beosztás mentve:", data))
+            .catch(error => console.error("Hiba történt:", error));
         }
 
         function loadSchedule() {
-            fetch(scheduleUrl)
+            fetch(`https://raw.githubusercontent.com/${githubRepo}/main/${githubFilePath}`)
                 .then(response => response.json())
                 .then(schedule => generateCalendar(schedule))
                 .catch(error => {
