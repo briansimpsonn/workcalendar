@@ -117,7 +117,7 @@
                 method: "POST",
                 headers: {
                     "Accept": "application/vnd.github.v3+json",
-                    "Authorization": `token ${process.env.ACCESS_TOKEN}`,  // GitHub Secrets-ből fogja beolvasni
+                    "Authorization": `token ${process.env.SCHEDULE}`,  // GitHub Secrets-ből fogja beolvasni
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
