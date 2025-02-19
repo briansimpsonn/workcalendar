@@ -33,9 +33,9 @@
             color: white;
             font-size: 16px;
         }
-        .peter { background-color: #a0c4ff; color: black; }
-        .david { background-color: #fff3b0; color: black; }
-        .tibor { background-color: #b7e4c7; color: black; }
+        .peter { background-color: #a0c4ff !important; color: black; }
+        .david { background-color: #fff3b0 !important; color: black; }
+        .tibor { background-color: #b7e4c7 !important; color: black; }
         .time-slot {
             height: 50px;
             cursor: pointer;
@@ -93,13 +93,14 @@
             headerRow += `</tr>`;
             tableBody.innerHTML += headerRow;
 
-            for (let hour = 8; hour < 16; hour++) {
+            for (let hour = 8; hour < 17; hour++) {
                 let row = `<tr><td>${hour}:00 - ${hour + 1}:00</td>`;
                 daysOfWeek.forEach(day => {
                     let assignedUser = schedule[day]?.[hour] || "";
                     let userClass = colors[assignedUser] || "";
-                    row += `<td class="time-slot ${userClass}">
+                    row += `<td class="time-slot ${userClass}" data-day="${day}" data-hour="${hour}">
                         <select class="user-select" data-day="${day}" data-hour="${hour}" onchange="updateColor(this)">
+                            <option value="" ${assignedUser === "" ? "selected" : ""}>-</option>
                             <option value="Péter" ${assignedUser === "Péter" ? "selected" : ""}>Péter</option>
                             <option value="Dávid" ${assignedUser === "Dávid" ? "selected" : ""}>Dávid</option>
                             <option value="Tibor" ${assignedUser === "Tibor" ? "selected" : ""}>Tibor</option>
@@ -114,7 +115,7 @@
         function updateColor(select) {
             let selectedUser = select.value;
             let parentCell = select.parentNode;
-            parentCell.className = `time-slot ${colors[selectedUser]}`;
+            parentCell.className = `time-slot ${colors[selectedUser] || ''}`;
         }
 
         async function saveSchedule() {
@@ -163,4 +164,3 @@
     </div>
 </body>
 </html>
-
