@@ -65,8 +65,21 @@
             border-radius: 5px;
         }
     </style>
+    <script src="https://www.gstatic.com/firebasejs/9.8.4/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.8.4/firebase-firestore.js"></script>
     <script>
-        const githubRepo = "briansimpsonn/workcalendar"; // Cseréld le a saját repo nevedre
+        const firebaseConfig = {
+            apiKey: "AIzaSyDOtAvNY-0ghYAf_QCmpQ0H4o8j3ijJ2jQ",
+            authDomain: "workschedule-ae8e4.firebaseapp.com",
+            projectId: "workschedule-ae8e4",
+            storageBucket: "workschedule-ae8e4.firebasestorage.app",
+            messagingSenderId: "276022062925",
+            appId: "1:276022062925:web:5df05bfdf1d054f83c5104"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        
         const colors = { "Péter": "peter", "Dávid": "david", "Tibor": "tibor" };
 
         function generateCalendar(schedule = {}) {
@@ -113,41 +126,26 @@
                 schedule[day][hour] = select.value;
             });
 
-            fetch(`https://api.github.com/repos/${githubRepo}/dispatches`, {
-                method: "POST",
-                headers: {
-                    "Accept": "application/vnd.github.v3+json",
-                    "Authorization": `token ${GH_ACTION_SECRET}`, // Cseréld le a GitHub Actions Secret használatára
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    event_type: "update-schedule",
-                    client_payload: { schedule: JSON.stringify(schedule, null, 2) }
-                })
-            })
-            .then(response => {
-                if (response.ok) {
-                    console.log("Mentés sikeres!");
-                    alert("Beosztás sikeresen mentve!");
-                } else {
-                    console.error("Hiba történt a mentés során!");
-                    alert("Hiba történt a mentés közben!");
-                }
-            })
-            .catch(error => {
+            try {
+                await db.collection("schedules").doc("current").set(schedule);
+                alert("Beosztás sikeresen mentve a Firebase-ben!");
+            } catch (error) {
                 console.error("Hiba történt:", error);
                 alert("Mentési hiba! Ellenőrizd a konzolt.");
-            });
+            }
         }
 
         function loadSchedule() {
-            fetch(`https://raw.githubusercontent.com/${githubRepo}/main/workSchedule.json`)
-                .then(response => response.json())
-                .then(schedule => generateCalendar(schedule))
-                .catch(error => {
-                    console.error('Hiba a naptár betöltésekor:', error);
+            db.collection("schedules").doc("current").get().then((doc) => {
+                if (doc.exists) {
+                    generateCalendar(doc.data());
+                } else {
                     generateCalendar();
-                });
+                }
+            }).catch(error => {
+                console.error('Hiba a naptár betöltésekor:', error);
+                generateCalendar();
+            });
         }
 
         window.onload = loadSchedule;
