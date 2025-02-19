@@ -1,1 +1,166 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Munkabeosztás Naptár</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f3f3f3;
+        }
+        .calendar-container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 20px auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 15px;
+            border: 1px solid #ccc;
+            text-align: center;
+        }
+        th {
+            background-color: #005a9e;
+            color: white;
+            font-size: 16px;
+        }
+        .peter { background-color: #a0c4ff; color: black; }
+        .david { background-color: #fff3b0; color: black; }
+        .tibor { background-color: #b7e4c7; color: black; }
+        .time-slot {
+            height: 50px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .time-slot:hover {
+            opacity: 0.8;
+        }
+        select {
+            width: 100%;
+            padding: 5px;
+            border: none;
+            background: transparent;
+            font-size: 16px;
+        }
+        .buttons {
+            margin: 20px;
+        }
+        button {
+            padding: 10px 15px;
+            font-size: 16px;
+            margin: 5px;
+            cursor: pointer;
+            border: none;
+            background-color: #005a9e;
+            color: white;
+            border-radius: 5px;
+        }
+    </style>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDOtAvNY-0ghYAf_QCmpQ0H4o8j3ijJ2jQ",
+            authDomain: "workschedule-ae8e4.firebaseapp.com",
+            projectId: "workschedule-ae8e4",
+            storageBucket: "workschedule-ae8e4.appspot.com",
+            messagingSenderId: "276022062925",
+            appId: "1:276022062925:web:5df05bfdf1d054f83c5104"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        
+        const colors = { "Péter": "peter", "Dávid": "david", "Tibor": "tibor" };
+
+        function generateCalendar(schedule = {}) {
+            let tableBody = document.getElementById('calendar-body');
+            tableBody.innerHTML = '';
+            let daysOfWeek = ['Hétfő', 'Kedd', 'Szerda', 'Csütörtök', 'Péntek'];
+            let headerRow = `<tr><th>Idő</th>`;
+            daysOfWeek.forEach(day => {
+                headerRow += `<th>${day}</th>`;
+            });
+            headerRow += `</tr>`;
+            tableBody.innerHTML += headerRow;
+
+            for (let hour = 8; hour < 16; hour++) {
+                let row = `<tr><td>${hour}:00 - ${hour + 1}:00</td>`;
+                daysOfWeek.forEach(day => {
+                    let assignedUser = schedule[day]?.[hour] || "";
+                    let userClass = colors[assignedUser] || "";
+                    row += `<td class="time-slot ${userClass}">
+                        <select class="user-select" data-day="${day}" data-hour="${hour}" onchange="updateColor(this)">
+                            <option value="Péter" ${assignedUser === "Péter" ? "selected" : ""}>Péter</option>
+                            <option value="Dávid" ${assignedUser === "Dávid" ? "selected" : ""}>Dávid</option>
+                            <option value="Tibor" ${assignedUser === "Tibor" ? "selected" : ""}>Tibor</option>
+                        </select>
+                    </td>`;
+                });
+                row += `</tr>`;
+                tableBody.innerHTML += row;
+            }
+        }
+
+        function updateColor(select) {
+            let selectedUser = select.value;
+            let parentCell = select.parentNode;
+            parentCell.className = `time-slot ${colors[selectedUser]}`;
+        }
+
+        async function saveSchedule() {
+            let schedule = {};
+            document.querySelectorAll('.user-select').forEach(select => {
+                let day = select.dataset.day;
+                let hour = select.dataset.hour;
+                if (!schedule[day]) schedule[day] = {};
+                schedule[day][hour] = select.value;
+            });
+
+            try {
+                await db.collection("schedules").doc("current").set(schedule);
+                alert("Beosztás sikeresen mentve a Firebase-ben!");
+            } catch (error) {
+                console.error("Hiba történt:", error);
+                alert("Mentési hiba! Ellenőrizd a konzolt.");
+            }
+        }
+
+        function loadSchedule() {
+            db.collection("schedules").doc("current").get().then((doc) => {
+                if (doc.exists) {
+                    generateCalendar(doc.data());
+                } else {
+                    generateCalendar();
+                }
+            }).catch(error => {
+                console.error('Hiba a naptár betöltésekor:', error);
+                generateCalendar();
+            });
+        }
+
+        window.onload = loadSchedule;
+    </script>
+</head>
+<body>
+    <div class="calendar-container">
+        <h1>Munkabeosztás Naptár</h1>
+        <div class="buttons">
+            <button onclick="saveSchedule()">Beosztás mentése</button>
+        </div>
+        <table>
+            <tbody id="calendar-body"></tbody>
+        </table>
+    </div>
+</body>
+</html>
 
